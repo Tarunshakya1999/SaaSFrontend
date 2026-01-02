@@ -8,7 +8,7 @@ import FeaturePage from "./FeaturePage";
 
 /* ===== BRANDING COMPONENTS ===== */
 import BrandingLayout from "./BrandingLayout";
-import OverView from "./OverView";
+import OverView from "./Overview";
 import AiBrandName from "./AiBrandName";
 import AiLogoGenerator from "./Logo";
 import AiVisitingCard from "./AiVisitingCard";
