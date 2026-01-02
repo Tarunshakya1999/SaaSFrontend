@@ -420,8 +420,10 @@ import {
   ArrowRight,
   Star,
 } from "lucide-react";
+
 import logo90 from "./assets/logo90.jpeg";
-import Link from "react-router-dom"
+import {Link} from "react-router-dom"
+
 export default function Signup() {
   const [formData, setFormData] = useState({
     username: "",
