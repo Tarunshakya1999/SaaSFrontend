@@ -42,11 +42,18 @@ import EmailSMSAutomation from "./EmailSMSAutomation";
 import FollowupsAndLeadScoring from "./FollowupsAndLeadScoring";
 import TaskWorkflowManager from "./TaskWorkflowManager";
 import PaymentAndInvoiceAutomation from "./PaymentAndInvoiceAutomation";
+import CampaignCreate from "./CampaignCreate";
+import Client from "./Client";
+
+
+
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+      <Route path="/campaign" element={<CampaignCreate />} />
+      <Route path="/clients" element={<Client/>} />
         {/* ===== AUTH ===== */}
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
@@ -130,6 +137,8 @@ export default function App() {
           <Route path=":module/:feature" element={<FeaturePage />} />
         </Route>
       </Routes>
+
+     
     </BrowserRouter>
   );
 }

@@ -1,975 +1,704 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import axios from "axios";
+import {
+  Mail,
+  MessageSquare,
+  Send,
+  Calendar,
+  Users,
+  Sparkles,
+  Zap,
+  CheckCircle,
+  Plus,
+  Trash2,
+  Clock,
+  Save,
+  FolderPlus,
+  Edit,
+  X,
+  Type,
+} from "lucide-react";
 
-const EmailSMSAutomation = () => {
-  // ==================== STATE MANAGEMENT ====================
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [automations, setAutomations] = useState([]);
-  const [templates, setTemplates] = useState([]);
-  const [contacts, setContacts] = useState([]);
-  const [analytics, setAnalytics] = useState({});
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [previewContent, setPreviewContent] = useState({});
-  const [newAutomation, setNewAutomation] = useState({
-    name: '',
-    type: 'email',
-    trigger: 'welcome',
-    audience: 'all',
-    schedule: 'immediate',
-    status: 'draft'
-  });
-  const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+export default function EmailSMSAutomation() {
+  const [title, setTitle] = useState("");
+  const [channel, setChannel] = useState("email");
+  const [subject, setSubject] = useState("");
+  const [message, setMessage] = useState("");
+  const [scheduleTimes, setScheduleTimes] = useState([""]);
+  const [contacts, setContacts] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState("");
 
-  // ==================== INITIAL DATA ====================
+  // Template Management States
+  const [emailTemplates, setEmailTemplates] = useState([]);
+  const [smsTemplates, setSmsTemplates] = useState([]);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templateName, setTemplateName] = useState("");
+  const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showManageTemplates, setShowManageTemplates] = useState(false);
+
+  // Load templates from localStorage on component mount
   useEffect(() => {
-    // Simulate API call
-    setTimeout(() => {
-      setAutomations([
-        {
-          id: 1,
-          name: 'Welcome Email Series',
-          type: 'email',
-          status: 'active',
-          trigger: 'user_signup',
-          sent: 1250,
-          openRate: 78,
-          clickRate: 32,
-          lastRun: '2024-01-15',
-          nextRun: '2024-01-16'
-        },
-        {
-          id: 2,
-          name: 'Abandoned Cart SMS',
-          type: 'sms',
-          status: 'active',
-          trigger: 'cart_abandoned',
-          sent: 845,
-          openRate: 92,
-          clickRate: 28,
-          lastRun: '2024-01-14',
-          nextRun: '2024-01-15'
-        },
-        {
-          id: 3,
-          name: 'Weekly Newsletter',
-          type: 'email',
-          status: 'paused',
-          trigger: 'weekly',
-          sent: 3200,
-          openRate: 65,
-          clickRate: 18,
-          lastRun: '2024-01-10',
-          nextRun: '2024-01-17'
-        },
-        {
-          id: 4,
-          name: 'Order Confirmation',
-          type: 'email',
-          status: 'active',
-          trigger: 'order_placed',
-          sent: 2150,
-          openRate: 95,
-          clickRate: 45,
-          lastRun: '2024-01-15',
-          nextRun: 'Immediate'
-        },
-        {
-          id: 5,
-          name: 'Birthday SMS',
-          type: 'sms',
-          status: 'draft',
-          trigger: 'birthday',
-          sent: 0,
-          openRate: 0,
-          clickRate: 0,
-          lastRun: 'Never',
-          nextRun: '2024-01-25'
-        }
-      ]);
+    const savedEmailTemplates = localStorage.getItem("emailTemplates");
+    const savedSmsTemplates = localStorage.getItem("smsTemplates");
 
-      setTemplates([
+    if (savedEmailTemplates) {
+      setEmailTemplates(JSON.parse(savedEmailTemplates));
+    } else {
+      // Default templates
+      const defaultEmailTemplates = [
         {
-          id: 1,
-          name: 'Welcome Email',
-          type: 'email',
-          category: 'Onboarding',
-          lastEdited: '2024-01-10',
-          usage: 1250
+          id: Date.now() + 1,
+          name: "Welcome Email",
+          subject: "Welcome to Our Service!",
+          message:
+            "Hi {name},\n\nWelcome to our platform! We're excited to have you onboard.",
         },
         {
-          id: 2,
-          name: 'Order Confirmation',
-          type: 'email',
-          category: 'Transactional',
-          lastEdited: '2024-01-12',
-          usage: 2150
+          id: Date.now() + 2,
+          name: "Promotional Email",
+          subject: "Special Offer Just for You!",
+          message:
+            "Dear customer,\n\nDon't miss out on our exclusive offer! Get 50% off on your first purchase.",
         },
         {
-          id: 3,
-          name: 'Cart Reminder',
-          type: 'sms',
-          category: 'Marketing',
-          lastEdited: '2024-01-08',
-          usage: 845
+          id: Date.now() + 3,
+          name: "Newsletter",
+          subject: "Monthly Updates & News",
+          message:
+            "Hello,\n\nHere are this month's updates and exciting news from our team.",
+        },
+      ];
+      setEmailTemplates(defaultEmailTemplates);
+      localStorage.setItem(
+        "emailTemplates",
+        JSON.stringify(defaultEmailTemplates)
+      );
+    }
+
+    if (savedSmsTemplates) {
+      setSmsTemplates(JSON.parse(savedSmsTemplates));
+    } else {
+      // Default templates
+      const defaultSmsTemplates = [
+        {
+          id: Date.now() + 4,
+          name: "Welcome SMS",
+          message:
+            "Welcome to our service! We're glad to have you. Reply HELP for assistance.",
         },
         {
-          id: 4,
-          name: 'Newsletter Template',
-          type: 'email',
-          category: 'Newsletter',
-          lastEdited: '2024-01-05',
-          usage: 3200
-        }
-      ]);
-
-      setContacts([
-        { id: 1, email: 'john@example.com', phone: '+1-234-567-8901', status: 'active', lastActive: 'Today' },
-        { id: 2, email: 'sarah@business.com', phone: '+1-234-567-8902', status: 'active', lastActive: 'Yesterday' },
-        { id: 3, email: 'mike@company.org', phone: '+1-234-567-8903', status: 'unsubscribed', lastActive: '2 days ago' },
-        { id: 4, email: 'lisa@startup.io', phone: '+1-234-567-8904', status: 'active', lastActive: 'Today' },
-        { id: 5, email: 'david@enterprise.com', phone: '+1-234-567-8905', status: 'active', lastActive: 'Yesterday' }
-      ]);
-
-      setAnalytics({
-        totalSent: 7445,
-        openRate: 78.5,
-        clickRate: 28.3,
-        bounceRate: 2.1,
-        unsubscribeRate: 0.8,
-        revenueGenerated: 45250,
-        topPerforming: 'Welcome Email Series'
-      });
-
-      setLoading(false);
-    }, 1000);
+          id: Date.now() + 5,
+          name: "Promotional SMS",
+          message:
+            "FLASH SALE! Get 50% OFF today only. Use code: FLASH50. Shop now!",
+        },
+        {
+          id: Date.now() + 6,
+          name: "Alert SMS",
+          message:
+            "Important alert: Your order has been shipped. Track here: {link}",
+        },
+      ];
+      setSmsTemplates(defaultSmsTemplates);
+      localStorage.setItem("smsTemplates", JSON.stringify(defaultSmsTemplates));
+    }
   }, []);
 
-  // ==================== HANDLERS ====================
-  const handleCreateAutomation = () => {
-    const newAuto = {
-      ...newAutomation,
-      id: automations.length + 1,
-      sent: 0,
-      openRate: 0,
-      clickRate: 0,
-      lastRun: 'Never'
+  const templates = channel === "email" ? emailTemplates : smsTemplates;
+
+  // Template Management Functions
+  const saveTemplatesToLocalStorage = () => {
+    localStorage.setItem("emailTemplates", JSON.stringify(emailTemplates));
+    localStorage.setItem("smsTemplates", JSON.stringify(smsTemplates));
+  };
+
+  const saveCurrentAsTemplate = () => {
+    if (!templateName.trim()) {
+      alert("Please enter a template name");
+      return;
+    }
+
+    const newTemplate = {
+      id: editingTemplate ? editingTemplate.id : Date.now(),
+      name: templateName,
+      subject: channel === "email" ? subject : "",
+      message: message,
     };
-    setAutomations([...automations, newAuto]);
-    setShowCreateModal(false);
-    setNewAutomation({
-      name: '',
-      type: 'email',
-      trigger: 'welcome',
-      audience: 'all',
-      schedule: 'immediate',
-      status: 'draft'
-    });
+
+    if (channel === "email") {
+      if (editingTemplate) {
+        setEmailTemplates((prev) =>
+          prev.map((t) => (t.id === editingTemplate.id ? newTemplate : t))
+        );
+      } else {
+        setEmailTemplates((prev) => [...prev, newTemplate]);
+      }
+      saveTemplatesToLocalStorage();
+    } else {
+      if (editingTemplate) {
+        setSmsTemplates((prev) =>
+          prev.map((t) => (t.id === editingTemplate.id ? newTemplate : t))
+        );
+      } else {
+        setSmsTemplates((prev) => [...prev, newTemplate]);
+      }
+      saveTemplatesToLocalStorage();
+    }
+
+    setShowTemplateModal(false);
+    setTemplateName("");
+    setEditingTemplate(null);
+    alert(`Template "${templateName}" saved successfully!`);
   };
 
-  const handleToggleStatus = (id) => {
-    setAutomations(automations.map(auto => 
-      auto.id === id 
-        ? { ...auto, status: auto.status === 'active' ? 'paused' : 'active' }
-        : auto
-    ));
+  const deleteTemplate = (templateId) => {
+    if (window.confirm("Are you sure you want to delete this template?")) {
+      if (channel === "email") {
+        setEmailTemplates((prev) => prev.filter((t) => t.id !== templateId));
+      } else {
+        setSmsTemplates((prev) => prev.filter((t) => t.id !== templateId));
+      }
+      saveTemplatesToLocalStorage();
+    }
   };
 
-  const handleDeleteAutomation = (id) => {
-    setAutomations(automations.filter(auto => auto.id !== id));
+  const editTemplate = (template) => {
+    setTemplateName(template.name);
+    if (channel === "email") {
+      setSubject(template.subject || "");
+    }
+    setMessage(template.message);
+    setEditingTemplate(template);
+    setShowTemplateModal(true);
   };
 
-  const handlePreview = (content) => {
-    setPreviewContent(content);
-    setShowPreviewModal(true);
+  const openNewTemplateModal = () => {
+    setTemplateName("");
+    setEditingTemplate(null);
+    setShowTemplateModal(true);
   };
 
-  const filteredAutomations = automations.filter(auto =>
-    auto.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    auto.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const applyTemplate = (template) => {
+    setSelectedTemplate(template.id);
+    if (channel === "email") {
+      setSubject(template.subject || "");
+    }
+    setMessage(template.message);
+  };
 
-  // ==================== RENDER FUNCTIONS ====================
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      {/* Analytics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Total Sent</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{analytics.totalSent?.toLocaleString()}</p>
-            </div>
-            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-blue-600 text-xl">📨</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center text-sm text-green-600">
-              <span>↑ 12.5%</span>
-              <span className="mx-1">•</span>
-              <span>vs last month</span>
-            </div>
-          </div>
-        </div>
+  // Schedule Time Functions
+  const addScheduleTime = () => {
+    setScheduleTimes([...scheduleTimes, ""]);
+  };
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Open Rate</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{analytics.openRate}%</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-              <span className="text-green-600 text-xl">👁️</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center text-sm text-green-600">
-              <span>↑ 3.2%</span>
-              <span className="mx-1">•</span>
-              <span>vs last month</span>
-            </div>
-          </div>
-        </div>
+  const removeScheduleTime = (index) => {
+    const newTimes = scheduleTimes.filter((_, i) => i !== index);
+    setScheduleTimes(newTimes);
+  };
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Click Rate</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">{analytics.clickRate}%</p>
-            </div>
-            <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <span className="text-purple-600 text-xl">🔗</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center text-sm text-green-600">
-              <span>↑ 1.8%</span>
-              <span className="mx-1">•</span>
-              <span>vs last month</span>
-            </div>
-          </div>
-        </div>
+  const updateScheduleTime = (index, value) => {
+    const newTimes = [...scheduleTimes];
+    newTimes[index] = value;
+    setScheduleTimes(newTimes);
+  };
+  const submit = async () => {
+    const validScheduleTimes = scheduleTimes.filter((t) => t);
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm text-gray-500">Revenue Generated</p>
-              <p className="text-2xl font-bold text-gray-800 mt-1">${analytics.revenueGenerated?.toLocaleString()}</p>
-            </div>
-            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center">
-              <span className="text-yellow-600 text-xl">💰</span>
-            </div>
-          </div>
-          <div className="mt-4">
-            <div className="flex items-center text-sm text-green-600">
-              <span>↑ 24.7%</span>
-              <span className="mx-1">•</span>
-              <span>vs last month</span>
-            </div>
-          </div>
-        </div>
-      </div>
+    if (validScheduleTimes.length === 0) {
+      alert("Please add at least one schedule time!");
+      return;
+    }
 
-      {/* Recent Activity & Quick Actions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Recent Activity</h3>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-blue-600 text-sm">📧</span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">Welcome Email Sent</p>
-                  <p className="text-sm text-gray-500">To 125 new users</p>
-                </div>
-              </div>
-              <span className="text-sm text-gray-500">2 hours ago</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-green-600 text-sm">📱</span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">SMS Campaign Completed</p>
-                  <p className="text-sm text-gray-500">845 messages delivered</p>
-                </div>
-              </div>
-              <span className="text-sm text-gray-500">4 hours ago</span>
-            </div>
-            <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-              <div className="flex items-center">
-                <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
-                  <span className="text-purple-600 text-sm">📊</span>
-                </div>
-                <div>
-                  <p className="font-medium text-gray-800">Weekly Report Generated</p>
-                  <p className="text-sm text-gray-500">Performance analytics ready</p>
-                </div>
-              </div>
-              <span className="text-sm text-gray-500">1 day ago</span>
-            </div>
-          </div>
-        </div>
+    try {
+      setIsSubmitting(true);
+      const contactsList = contacts.split(",").map((c) => c.trim());
+      
+      // Create campaign for EACH schedule time
+      const promises = validScheduleTimes.map((scheduleTime, index) => {
+        const payload = {
+          title: `${title} (Schedule #${index + 1})`,
+          channel,
+          subject,
+          message,
+          schedule_time: scheduleTime,
+          contacts: contactsList,
+        };
 
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Actions</h3>
-          <div className="space-y-3">
-            <button 
-              onClick={() => setShowCreateModal(true)}
-              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all"
-            >
-              <div className="flex items-center">
-                <span className="text-xl mr-3">✨</span>
-                <span className="font-medium">Create New Automation</span>
-              </div>
-              <span>→</span>
-            </button>
-            <button 
-              onClick={() => handlePreview({type: 'email', name: 'New Template'})}
-              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all"
-            >
-              <div className="flex items-center">
-                <span className="text-xl mr-3">📝</span>
-                <span className="font-medium">Create Template</span>
-              </div>
-              <span>→</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('contacts')}
-              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 transition-all"
-            >
-              <div className="flex items-center">
-                <span className="text-xl mr-3">👥</span>
-                <span className="font-medium">Import Contacts</span>
-              </div>
-              <span>→</span>
-            </button>
-            <button 
-              onClick={() => setActiveTab('analytics')}
-              className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-lg hover:from-orange-600 hover:to-orange-700 transition-all"
-            >
-              <div className="flex items-center">
-                <span className="text-xl mr-3">📈</span>
-                <span className="font-medium">View Reports</span>
-              </div>
-              <span>→</span>
-            </button>
-          </div>
-        </div>
-      </div>
+        return axios.post(
+          "http://127.0.0.1:8000/api/campaign/",
+          payload,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("access")}`,
+            },
+          }
+        );
+      });
 
-      {/* Top Performing Automations */}
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-lg font-semibold text-gray-800">Top Performing Automations</h3>
-          <button 
-            onClick={() => setActiveTab('automations')}
-            className="text-blue-600 hover:text-blue-700 font-medium"
-          >
-            View All →
-          </button>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200">
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Name</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Type</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Status</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Sent</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Open Rate</th>
-                <th className="text-left py-3 px-4 text-sm font-medium text-gray-500">Click Rate</th>
-              </tr>
-            </thead>
-            <tbody>
-              {automations.slice(0, 3).map(auto => (
-                <tr key={auto.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-4">
-                    <div className="font-medium text-gray-800">{auto.name}</div>
-                    <div className="text-sm text-gray-500">Trigger: {auto.trigger.replace('_', ' ')}</div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${auto.type === 'email' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'}`}>
-                      {auto.type === 'email' ? '📧 Email' : '📱 SMS'}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${auto.status === 'active' ? 'bg-green-100 text-green-800' : auto.status === 'paused' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}`}>
-                      {auto.status.charAt(0).toUpperCase() + auto.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="py-4 px-4 font-medium text-gray-800">{auto.sent.toLocaleString()}</td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-800 mr-2">{auto.openRate}%</span>
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full" 
-                          style={{ width: `${auto.openRate}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="py-4 px-4">
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-800 mr-2">{auto.clickRate}%</span>
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-blue-500 h-2 rounded-full" 
-                          style={{ width: `${auto.clickRate}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAutomations = () => (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Automation Workflows</h2>
-          <p className="text-gray-600 mt-1">Create and manage your email & SMS automation sequences</p>
-        </div>
-        <button 
-          onClick={() => setShowCreateModal(true)}
-          className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-6 py-3 rounded-lg font-medium flex items-center"
-        >
-          <span className="mr-2">+</span> Create Automation
-        </button>
-      </div>
-
-      {/* Search and Filter */}
-      <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="flex-1">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search automations..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                style={{ color: '#111827' }}
-              />
-              <div className="absolute left-3 top-2.5 text-gray-400">
-                🔍
-              </div>
-            </div>
-          </div>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
-            <option>All Types</option>
-            <option>Email</option>
-            <option>SMS</option>
-          </select>
-          <select className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900">
-            <option>All Status</option>
-            <option>Active</option>
-            <option>Paused</option>
-            <option>Draft</option>
-          </select>
-        </div>
-      </div>
-
-      {/* Automations Grid */}
-      {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-          <p className="mt-4 text-gray-600">Loading automations...</p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredAutomations.map(auto => (
-            <div key={auto.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 className="font-bold text-gray-800 text-lg">{auto.name}</h3>
-                    <div className="flex items-center mt-1">
-                      <span className={`text-sm font-medium ${auto.type === 'email' ? 'text-blue-600' : 'text-green-600'}`}>
-                        {auto.type === 'email' ? '📧 Email' : '📱 SMS'}
-                      </span>
-                      <span className="mx-2 text-gray-300">•</span>
-                      <span className="text-sm text-gray-500">Trigger: {auto.trigger.replace('_', ' ')}</span>
-                    </div>
-                  </div>
-                  <div className="relative">
-                    <button className="text-gray-400 hover:text-gray-600">
-                      ⋮
-                    </button>
-                  </div>
-                </div>
-
-                {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-6">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">{auto.sent.toLocaleString()}</div>
-                    <div className="text-xs text-gray-500">Sent</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">{auto.openRate}%</div>
-                    <div className="text-xs text-gray-500">Open Rate</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">{auto.clickRate}%</div>
-                    <div className="text-xs text-gray-500">Click Rate</div>
-                  </div>
-                </div>
-
-                {/* Schedule Info */}
-                <div className="bg-gray-50 rounded-lg p-3 mb-4">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-gray-500">Last Run:</span>
-                    <span className="font-medium text-gray-800">{auto.lastRun}</span>
-                  </div>
-                  <div className="flex justify-between text-sm mt-1">
-                    <span className="text-gray-500">Next Run:</span>
-                    <span className="font-medium text-gray-800">{auto.nextRun}</span>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleToggleStatus(auto.id)}
-                    className={`flex-1 py-2 px-4 rounded-lg font-medium ${auto.status === 'active' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200' : 'bg-green-100 text-green-800 hover:bg-green-200'}`}
-                  >
-                    {auto.status === 'active' ? 'Pause' : 'Activate'}
-                  </button>
-                  <button 
-                    onClick={() => handlePreview(auto)}
-                    className="flex-1 py-2 px-4 bg-blue-100 text-blue-800 rounded-lg font-medium hover:bg-blue-200"
-                  >
-                    Preview
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteAutomation(auto.id)}
-                    className="py-2 px-4 bg-red-100 text-red-800 rounded-lg font-medium hover:bg-red-200"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-
-  const renderTemplates = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Email & SMS Templates</h2>
-          <p className="text-gray-600 mt-1">Create and manage reusable templates</p>
-        </div>
-        <button 
-          onClick={() => handlePreview({type: 'email', name: 'New Template'})}
-          className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white px-6 py-3 rounded-lg font-medium flex items-center"
-        >
-          <span className="mr-2">+</span> New Template
-        </button>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {templates.map(template => (
-          <div key={template.id} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow">
-            <div className="p-6">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <h3 className="font-bold text-gray-800">{template.name}</h3>
-                  <div className="flex items-center mt-1">
-                    <span className={`text-sm font-medium ${template.type === 'email' ? 'text-blue-600' : 'text-green-600'}`}>
-                      {template.type === 'email' ? '📧 Email' : '📱 SMS'}
-                    </span>
-                    <span className="mx-2 text-gray-300">•</span>
-                    <span className="text-sm text-gray-500">{template.category}</span>
-                  </div>
-                </div>
-                <span className="text-sm text-gray-500">Used {template.usage.toLocaleString()} times</span>
-              </div>
-              
-              <div className="mb-4">
-                <div className="text-sm text-gray-500 mb-1">Last Edited</div>
-                <div className="font-medium text-gray-800">{template.lastEdited}</div>
-              </div>
-
-              <div className="flex space-x-2">
-                <button 
-                  onClick={() => handlePreview(template)}
-                  className="flex-1 py-2 px-4 bg-blue-100 text-blue-800 rounded-lg font-medium hover:bg-blue-200"
-                >
-                  Edit
-                </button>
-                <button className="flex-1 py-2 px-4 bg-gray-100 text-gray-800 rounded-lg font-medium hover:bg-gray-200">
-                  Duplicate
-                </button>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-
-  const renderContacts = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-800">Contacts</h2>
-          <p className="text-gray-600 mt-1">Manage your audience and segments</p>
-        </div>
-        <button className="bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white px-6 py-3 rounded-lg font-medium flex items-center">
-          <span className="mr-2">+</span> Import Contacts
-        </button>
-      </div>
-
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-200 bg-gray-50">
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-700">Email</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-700">Phone</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-700">Status</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-700">Last Active</th>
-                <th className="text-left py-4 px-6 text-sm font-medium text-gray-700">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {contacts.map(contact => (
-                <tr key={contact.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-4 px-6">
-                    <div className="font-medium text-gray-800">{contact.email}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <div className="text-gray-600">{contact.phone}</div>
-                  </td>
-                  <td className="py-4 px-6">
-                    <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${contact.status === 'active' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {contact.status.charAt(0).toUpperCase() + contact.status.slice(1)}
-                    </span>
-                  </td>
-                  <td className="py-4 px-6 text-gray-600">{contact.lastActive}</td>
-                  <td className="py-4 px-6">
-                    <button className="text-blue-600 hover:text-blue-700 font-medium">
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-
-  const renderAnalytics = () => (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold text-gray-800">Analytics & Reports</h2>
-        <p className="text-gray-600 mt-1">Track performance and generate insights</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Performance Overview</h3>
-            <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-              <div className="text-center">
-                <div className="text-4xl mb-2">📊</div>
-                <p className="text-gray-600">Performance chart would appear here</p>
-                <p className="text-sm text-gray-500 mt-1">Open Rate: {analytics.openRate}% • Click Rate: {analytics.clickRate}%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-          <h3 className="text-lg font-semibold text-gray-800 mb-4">Quick Stats</h3>
-          <div className="space-y-4">
-            <div className="p-3 bg-blue-50 rounded-lg">
-              <div className="text-sm text-gray-500">Top Performing</div>
-              <div className="font-medium text-gray-800">{analytics.topPerforming}</div>
-            </div>
-            <div className="p-3 bg-green-50 rounded-lg">
-              <div className="text-sm text-gray-500">Bounce Rate</div>
-              <div className="font-medium text-gray-800">{analytics.bounceRate}%</div>
-            </div>
-            <div className="p-3 bg-red-50 rounded-lg">
-              <div className="text-sm text-gray-500">Unsubscribe Rate</div>
-              <div className="font-medium text-gray-800">{analytics.unsubscribeRate}%</div>
-            </div>
-            <div className="p-3 bg-purple-50 rounded-lg">
-              <div className="text-sm text-gray-500">Avg. Engagement</div>
-              <div className="font-medium text-gray-800">High</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-        <h3 className="text-lg font-semibold text-gray-800 mb-4">Export Reports</h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-all text-center">
-            <div className="text-2xl mb-2">📥</div>
-            <div className="font-medium text-gray-800">Daily Report</div>
-            <div className="text-sm text-gray-500 mt-1">Export today's metrics</div>
-          </button>
-          <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-green-500 hover:bg-green-50 transition-all text-center">
-            <div className="text-2xl mb-2">📈</div>
-            <div className="font-medium text-gray-800">Weekly Report</div>
-            <div className="text-sm text-gray-500 mt-1">Last 7 days performance</div>
-          </button>
-          <button className="p-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 transition-all text-center">
-            <div className="text-2xl mb-2">📋</div>
-            <div className="font-medium text-gray-800">Custom Report</div>
-            <div className="text-sm text-gray-500 mt-1">Select date range & metrics</div>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
+      // Wait for all campaigns to be created
+      await Promise.all(promises);
+      
+      console.log(`✅ ${validScheduleTimes.length} campaigns scheduled!`);
+      setShowSuccess(true);
+      
+      // Auto-hide success after 3 seconds
+      setTimeout(() => setShowSuccess(false), 3000);
+    } catch (err) {
+      console.error(err);
+      alert("Campaign failed ❌\n" + (err.response?.data?.error || err.message));
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center mr-3">
-                <span className="text-white text-xl">✉️</span>
-              </div>
-              <div>
-                <h1 className="text-2xl font-bold text-gray-800">Email/SMS Automation</h1>
-                <p className="text-gray-600 text-sm">Automate your marketing communications</p>
-              </div>
-            </div>
-            <div className="flex items-center space-x-4">
-              <button className="bg-gray-100 hover:bg-gray-200 text-gray-800 px-4 py-2 rounded-lg font-medium">
-                Support
-              </button>
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                A
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 p-4 sm:p-8 relative overflow-hidden">
+      {/* Animated floating shapes */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-20 left-10 w-72 h-72 bg-yellow-400 rounded-full opacity-20 animate-float"></div>
+        <div className="absolute top-40 right-20 w-96 h-96 bg-cyan-400 rounded-full opacity-15 animate-float-delayed"></div>
+        <div className="absolute bottom-20 left-1/3 w-80 h-80 bg-pink-400 rounded-full opacity-20 animate-float-slow"></div>
+        <div className="absolute top-1/2 right-10 w-64 h-64 bg-green-400 rounded-full opacity-15 animate-float"></div>
+      </div>
 
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Navigation Tabs */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-8">
-          <div className="flex overflow-x-auto">
-            {['dashboard', 'automations', 'templates', 'contacts', 'analytics'].map((tab) => (
+      <div className="relative max-w-5xl mx-auto">
+        {/* Header Section */}
+        <div className="text-center mb-10 animate-fade-down">
+          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-3xl mb-6 shadow-2xl animate-bounce-slow">
+            <Zap className="w-10 h-10 text-white" />
+          </div>
+          <h1 className="text-5xl sm:text-6xl font-black text-white mb-3 tracking-tight">
+            Campaign<span className="text-yellow-400"> Automation</span>
+          </h1>
+          <p className="text-xl text-purple-200">
+            Launch powerful email & SMS campaigns in seconds
+          </p>
+        </div>
+
+        {/* Main Form Card */}
+        <div className="bg-white rounded-3xl shadow-2xl p-8 sm:p-10 space-y-8 animate-slide-up-fade border-4 border-purple-200">
+          {/* Campaign Title */}
+          <div className="space-y-3 animate-fade-in">
+            <label className="flex items-center gap-3 text-lg font-bold text-gray-800">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Send className="w-5 h-5 text-white" />
+              </div>
+              Campaign Title
+            </label>
+            <input
+              className="w-full px-5 py-4 text-lg rounded-2xl border-3 border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-200 outline-none transition-all duration-300 bg-gradient-to-r from-blue-50 to-cyan-50 text-gray-900 placeholder-gray-500 font-medium shadow-inner"
+              placeholder="My Awesome Campaign"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          {/* Channel Selection */}
+          <div className="space-y-3 animate-fade-in animation-delay-100">
+            <label className="flex items-center gap-3 text-lg font-bold text-gray-800">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shadow-lg">
+                <MessageSquare className="w-5 h-5 text-white" />
+              </div>
+              Choose Channel
+            </label>
+            <div className="grid grid-cols-2 gap-4">
               <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-6 py-4 font-medium whitespace-nowrap ${activeTab === tab ? 'text-blue-600 border-b-2 border-blue-600' : 'text-gray-500 hover:text-gray-700'}`}
+                onClick={() => {
+                  setChannel("email");
+                  setSelectedTemplate("");
+                }}
+                className={`group relative p-6 rounded-2xl border-4 transition-all duration-300 flex flex-col items-center justify-center gap-3 font-bold text-lg overflow-hidden ${
+                  channel === "email"
+                    ? "border-blue-500 bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-2xl scale-105"
+                    : "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 hover:border-blue-400 hover:shadow-xl hover:scale-105"
+                }`}
               >
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                <Mail className="w-8 h-8" />
+                <span>Email</span>
+                {channel === "email" && (
+                  <div className="absolute inset-0 bg-white opacity-20 animate-pulse-glow"></div>
+                )}
               </button>
-            ))}
+              <button
+                onClick={() => {
+                  setChannel("sms");
+                  setSelectedTemplate("");
+                }}
+                className={`group relative p-6 rounded-2xl border-4 transition-all duration-300 flex flex-col items-center justify-center gap-3 font-bold text-lg overflow-hidden ${
+                  channel === "sms"
+                    ? "border-green-500 bg-gradient-to-br from-green-500 to-emerald-500 text-white shadow-2xl scale-105"
+                    : "border-gray-300 bg-gradient-to-br from-gray-50 to-gray-100 text-gray-700 hover:border-green-400 hover:shadow-xl hover:scale-105"
+                }`}
+              >
+                <MessageSquare className="w-8 h-8" />
+                <span>SMS</span>
+                {channel === "sms" && (
+                  <div className="absolute inset-0 bg-white opacity-20 animate-pulse-glow"></div>
+                )}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* Content Area */}
-        <div>
-          {activeTab === 'dashboard' && renderDashboard()}
-          {activeTab === 'automations' && renderAutomations()}
-          {activeTab === 'templates' && renderTemplates()}
-          {activeTab === 'contacts' && renderContacts()}
-          {activeTab === 'analytics' && renderAnalytics()}
-        </div>
-      </main>
-
-      {/* Create Automation Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Create New Automation</h2>
-                <button 
-                  onClick={() => setShowCreateModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
+          {/* Template Section */}
+          <div className="space-y-3 animate-fade-in animation-delay-150">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-3 text-lg font-bold text-gray-800">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Sparkles className="w-5 h-5 text-white" />
+                </div>
+                Templates ({templates.length} available)
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={openNewTemplateModal}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300"
                 >
-                  ×
+                  <FolderPlus className="w-4 h-4" />
+                  Save Current as Template
+                </button>
+                <button
+                  onClick={() => setShowManageTemplates(!showManageTemplates)}
+                  className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-gray-600 to-gray-800 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300"
+                >
+                  <Type className="w-4 h-4" />
+                  {showManageTemplates ? "Hide" : "Manage"} Templates
                 </button>
               </div>
+            </div>
 
-              <div className="space-y-6">
+            {/* Template List */}
+            {templates.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                {templates.map((template) => (
+                  <div
+                    key={template.id}
+                    className={`group relative p-4 rounded-xl border-3 transition-all duration-300 ${
+                      selectedTemplate === template.id
+                        ? "border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 shadow-lg"
+                        : "border-gray-200 bg-white hover:border-purple-300 hover:shadow-md"
+                    }`}
+                  >
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="font-bold text-gray-800">
+                        {template.name}
+                      </div>
+                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => editTemplate(template)}
+                          className="p-1 text-blue-600 hover:bg-blue-50 rounded"
+                          title="Edit Template"
+                        >
+                          <Edit className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => deleteTemplate(template.id)}
+                          className="p-1 text-red-600 hover:bg-red-50 rounded"
+                          title="Delete Template"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="text-sm text-gray-600 mb-3 line-clamp-2">
+                      {channel === "email"
+                        ? `Subject: ${template.subject || "No Subject"}`
+                        : template.message.substring(0, 60) + "..."}
+                    </div>
+                    <button
+                      onClick={() => applyTemplate(template)}
+                      className="w-full py-2 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 rounded-lg font-medium hover:from-purple-200 hover:to-pink-200 transition-all duration-300"
+                    >
+                      Use This Template
+                    </button>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center p-8 border-3 border-dashed border-gray-300 rounded-2xl">
+                <FolderPlus className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                <p className="text-gray-600">
+                  No templates found. Create your first template!
+                </p>
+                <button
+                  onClick={openNewTemplateModal}
+                  className="mt-4 inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Template
+                </button>
+              </div>
+            )}
+
+            {/* Manage Templates View */}
+            {showManageTemplates && templates.length > 0 && (
+              <div className="mt-6 p-4 border-2 border-gray-200 rounded-2xl">
+                <h3 className="font-bold text-lg text-gray-800 mb-4">
+                  Manage Templates ({templates.length})
+                </h3>
+                <div className="space-y-3">
+                  {templates.map((template) => (
+                    <div
+                      key={template.id}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                    >
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {template.name}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {channel === "email"
+                            ? `Subject: ${template.subject || "No Subject"}`
+                            : template.message.substring(0, 80) + "..."}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => editTemplate(template)}
+                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => deleteTemplate(template.id)}
+                          className="px-3 py-1 bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors"
+                        >
+                          Delete
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Email Subject (conditional) */}
+          {channel === "email" && (
+            <div className="space-y-3 animate-scale-in">
+              <label className="flex items-center gap-3 text-lg font-bold text-gray-800">
+                <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Mail className="w-5 h-5 text-white" />
+                </div>
+                Email Subject
+              </label>
+              <input
+                className="w-full px-5 py-4 text-lg rounded-2xl border-3 border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-200 outline-none transition-all duration-300 bg-gradient-to-r from-purple-50 to-pink-50 text-gray-900 placeholder-gray-500 font-medium shadow-inner"
+                placeholder="Don't miss this amazing offer!"
+                value={subject}
+                onChange={(e) => setSubject(e.target.value)}
+              />
+            </div>
+          )}
+
+          {/* Message */}
+          <div className="space-y-3 animate-fade-in animation-delay-200">
+            <label className="flex items-center gap-3 text-lg font-bold text-gray-800">
+              <div className="w-10 h-10 bg-gradient-to-br from-pink-500 to-rose-500 rounded-xl flex items-center justify-center shadow-lg">
+                <MessageSquare className="w-5 h-5 text-white" />
+              </div>
+              Your Message
+            </label>
+            <textarea
+              className="w-full px-5 py-4 text-lg rounded-2xl border-3 border-gray-300 focus:border-pink-500 focus:ring-4 focus:ring-pink-200 outline-none transition-all duration-300 bg-gradient-to-r from-pink-50 to-rose-50 text-gray-900 placeholder-gray-500 font-medium resize-none shadow-inner"
+              rows="6"
+              placeholder="Write your compelling message here..."
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+          </div>
+
+          {/* Recipients */}
+          <div className="space-y-3 animate-fade-in animation-delay-300">
+            <label className="flex items-center gap-3 text-lg font-bold text-gray-800">
+              <div className="w-10 h-10 bg-gradient-to-br from-orange-500 to-red-500 rounded-xl flex items-center justify-center shadow-lg">
+                <Users className="w-5 h-5 text-white" />
+              </div>
+              Recipients (comma separated)
+            </label>
+            <textarea
+              className="w-full px-5 py-4 text-lg rounded-2xl border-3 border-gray-300 focus:border-orange-500 focus:ring-4 focus:ring-orange-200 outline-none transition-all duration-300 bg-gradient-to-r from-orange-50 to-yellow-50 text-gray-900 placeholder-gray-500 font-medium resize-none shadow-inner"
+              rows="4"
+              placeholder={
+                channel === "email"
+                  ? "john@example.com, jane@example.com, bob@example.com"
+                  : "+1234567890, +0987654321, +1122334455"
+              }
+              value={contacts}
+              onChange={(e) => setContacts(e.target.value)}
+            />
+          </div>
+
+          {/* Multiple Schedule Times */}
+          <div className="space-y-3 animate-fade-in animation-delay-400">
+            <div className="flex items-center justify-between">
+              <label className="flex items-center gap-3 text-lg font-bold text-gray-800">
+                <div className="w-10 h-10 bg-gradient-to-br from-teal-500 to-cyan-500 rounded-xl flex items-center justify-center shadow-lg">
+                  <Calendar className="w-5 h-5 text-white" />
+                </div>
+                Schedule Times (Multiple)
+              </label>
+              <button
+                onClick={addScheduleTime}
+                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-teal-500 to-cyan-500 text-white rounded-xl font-bold hover:shadow-lg transition-all duration-300"
+              >
+                <Plus className="w-4 h-4" />
+                Add Time
+              </button>
+            </div>
+
+            {scheduleTimes.map((time, index) => (
+              <div key={index} className="flex items-center gap-3">
+                <div className="flex items-center gap-2 text-gray-700 font-medium">
+                  <Clock className="w-5 h-5" />
+                  <span>Time #{index + 1}</span>
+                </div>
+                <input
+                  type="datetime-local"
+                  className="flex-1 px-5 py-4 text-lg rounded-2xl border-3 border-gray-300 focus:border-teal-500 focus:ring-4 focus:ring-teal-200 outline-none transition-all duration-300 bg-gradient-to-r from-teal-50 to-cyan-50 text-gray-900 font-medium shadow-inner"
+                  value={time}
+                  onChange={(e) => updateScheduleTime(index, e.target.value)}
+                />
+                {scheduleTimes.length > 1 && (
+                  <button
+                    onClick={() => removeScheduleTime(index)}
+                    className="p-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all duration-300"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                )}
+              </div>
+            ))}
+
+            {scheduleTimes.length > 0 &&
+              scheduleTimes.every((t) => t.trim() === "") && (
+                <div className="text-amber-600 bg-amber-50 p-3 rounded-xl border-2 border-amber-200">
+                  ⚠️ Please add at least one schedule time
+                </div>
+              )}
+          </div>
+
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-4 animate-fade-in animation-delay-500">
+            <button
+              onClick={openNewTemplateModal}
+              className="relative overflow-hidden group bg-gradient-to-r from-gray-600 to-gray-800 text-white py-5 rounded-2xl font-bold text-lg shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:scale-105 active:scale-95 border-4 border-white"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-3">
+                <Save className="w-5 h-5" />
+                Save as Template
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-700 to-gray-900 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            </button>
+
+            <button
+              onClick={submit}
+              disabled={isSubmitting}
+              className="relative overflow-hidden group bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 text-white py-5 rounded-2xl font-black text-xl shadow-2xl hover:shadow-3xl transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed transform hover:scale-105 active:scale-95 border-4 border-white"
+            >
+              <span className="relative z-10 flex items-center justify-center gap-3">
+                {isSubmitting ? (
+                  <>
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Scheduling Campaigns...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-6 h-6" />
+                    Schedule Campaigns (
+                    {scheduleTimes.filter((t) => t.trim() !== "").length} times)
+                    <Send className="w-6 h-6" />
+                  </>
+                )}
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              {!isSubmitting && (
+                <div className="absolute inset-0 animate-shimmer bg-gradient-to-r from-transparent via-white to-transparent opacity-30"></div>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Template Modal */}
+      {showTemplateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 animate-fade-in">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-md w-full animate-scale-in border-4 border-purple-200">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-2xl font-black text-gray-800">
+                {editingTemplate ? "Edit Template" : "Save as Template"}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowTemplateModal(false);
+                  setTemplateName("");
+                  setEditingTemplate(null);
+                }}
+                className="p-2 hover:bg-gray-100 rounded-xl"
+              >
+                <X className="w-6 h-6 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-lg font-bold text-gray-800 mb-2">
+                  Template Name
+                </label>
+                <input
+                  type="text"
+                  value={templateName}
+                  onChange={(e) => setTemplateName(e.target.value)}
+                  className="w-full px-4 py-3 text-lg rounded-2xl border-3 border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-200 outline-none transition-all duration-300 bg-gradient-to-r from-purple-50 to-pink-50"
+                  placeholder="Enter template name"
+                />
+              </div>
+
+              {channel === "email" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Automation Name
+                  <label className="block text-lg font-bold text-gray-800 mb-2">
+                    Subject
                   </label>
                   <input
                     type="text"
-                    value={newAutomation.name}
-                    onChange={(e) => setNewAutomation({...newAutomation, name: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    placeholder="e.g., Welcome Email Series"
-                    style={{ color: '#111827' }}
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="w-full px-4 py-3 text-lg rounded-2xl border-3 border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-200 outline-none transition-all duration-300 bg-gradient-to-r from-purple-50 to-pink-50"
+                    placeholder="Email subject"
                   />
                 </div>
+              )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Type
-                    </label>
-                    <select
-                      value={newAutomation.type}
-                      onChange={(e) => setNewAutomation({...newAutomation, type: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                      style={{ color: '#111827' }}
-                    >
-                      <option value="email">📧 Email</option>
-                      <option value="sms">📱 SMS</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Trigger
-                    </label>
-                    <select
-                      value={newAutomation.trigger}
-                      onChange={(e) => setNewAutomation({...newAutomation, trigger: e.target.value})}
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                      style={{ color: '#111827' }}
-                    >
-                      <option value="welcome">Welcome</option>
-                      <option value="user_signup">User Signup</option>
-                      <option value="order_placed">Order Placed</option>
-                      <option value="cart_abandoned">Cart Abandoned</option>
-                      <option value="birthday">Birthday</option>
-                      <option value="weekly">Weekly</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Audience
-                  </label>
-                  <select
-                    value={newAutomation.audience}
-                    onChange={(e) => setNewAutomation({...newAutomation, audience: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    style={{ color: '#111827' }}
-                  >
-                    <option value="all">All Contacts</option>
-                    <option value="active">Active Users</option>
-                    <option value="new">New Subscribers</option>
-                    <option value="premium">Premium Users</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Schedule
-                  </label>
-                  <select
-                    value={newAutomation.schedule}
-                    onChange={(e) => setNewAutomation({...newAutomation, schedule: e.target.value})}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900"
-                    style={{ color: '#111827' }}
-                  >
-                    <option value="immediate">Immediate</option>
-                    <option value="daily">Daily</option>
-                    <option value="weekly">Weekly</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="custom">Custom Schedule</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-                  <button
-                    onClick={() => setShowCreateModal(false)}
-                    className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={handleCreateAutomation}
-                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700"
-                  >
-                    Create Automation
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Preview Modal */}
-      {showPreviewModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6">
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-2xl font-bold text-gray-800">Preview</h2>
-                <button 
-                  onClick={() => setShowPreviewModal(false)}
-                  className="text-gray-400 hover:text-gray-600 text-2xl"
-                >
-                  ×
-                </button>
+              <div>
+                <label className="block text-lg font-bold text-gray-800 mb-2">
+                  Message
+                </label>
+                <textarea
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows="4"
+                  className="w-full px-4 py-3 text-lg rounded-2xl border-3 border-gray-300 focus:border-purple-500 focus:ring-4 focus:ring-purple-200 outline-none transition-all duration-300 bg-gradient-to-r from-purple-50 to-pink-50 resize-none"
+                  placeholder="Message content"
+                />
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-8">
-                <div className="max-w-lg mx-auto">
-                  <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <div className="border-b border-gray-200 pb-4 mb-4">
-                      <div className="text-sm text-gray-500">Subject:</div>
-                      <div className="font-medium text-gray-800">Welcome to Our Platform!</div>
-                    </div>
-                    
-                    <div className="space-y-4 text-gray-800">
-                      <p>Hi [Name],</p>
-                      <p>Welcome to our platform! We're excited to have you on board.</p>
-                      <p>Here are some things you can do to get started:</p>
-                      <ul className="list-disc pl-5 space-y-2 text-gray-800">
-                        <li>Complete your profile</li>
-                        <li>Explore our features</li>
-                        <li>Connect with other users</li>
-                      </ul>
-                      <div className="my-6">
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium">
-                          Get Started
-                        </button>
-                      </div>
-                      <p>Best regards,<br/>The Team</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="flex justify-end space-x-4 pt-6 border-t border-gray-200 mt-6">
+              <div className="flex gap-3 pt-4">
                 <button
-                  onClick={() => setShowPreviewModal(false)}
-                  className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50"
+                  onClick={() => {
+                    setShowTemplateModal(false);
+                    setTemplateName("");
+                    setEditingTemplate(null);
+                  }}
+                  className="flex-1 px-6 py-3 bg-gray-100 text-gray-700 rounded-2xl font-bold hover:bg-gray-200 transition-all duration-300"
                 >
-                  Close
+                  Cancel
                 </button>
-                <button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg font-medium hover:from-blue-600 hover:to-blue-700">
-                  Edit Template
+                <button
+                  onClick={saveCurrentAsTemplate}
+                  className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-2xl font-bold hover:shadow-lg transition-all duration-300 flex items-center justify-center gap-2"
+                >
+                  <Save className="w-5 h-5" />
+                  {editingTemplate ? "Update Template" : "Save Template"}
                 </button>
               </div>
             </div>
@@ -977,39 +706,216 @@ const EmailSMSAutomation = () => {
         </div>
       )}
 
-      {/* Custom CSS for text visibility */}
-      <style jsx>{`
-        /* Ensure all text is visible */
-        input, select, textarea {
-          color: #111827 !important;
+      {/* Success Notification */}
+      {showSuccess && (
+        <div className="fixed top-8 right-8 bg-gradient-to-r from-green-500 to-emerald-600 text-white px-8 py-6 rounded-3xl shadow-2xl flex items-center gap-4 animate-bounce-in z-50 border-4 border-white">
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center animate-spin-slow">
+            <CheckCircle className="w-8 h-8 text-green-600" />
+          </div>
+          <div>
+            <p className="font-black text-xl">Campaigns Scheduled!</p>
+            <p className="text-lg text-green-100">
+              {scheduleTimes.filter((t) => t.trim() !== "").length} schedule(s)
+              created 🚀
+            </p>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes float {
+          0%,
+          100% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+          33% {
+            transform: translate(30px, -30px) rotate(120deg);
+          }
+          66% {
+            transform: translate(-20px, 20px) rotate(240deg);
+          }
         }
-        
-        input::placeholder, select::placeholder {
-          color: #6b7280 !important;
+
+        @keyframes float-delayed {
+          0%,
+          100% {
+            transform: translate(0, 0) rotate(0deg);
+          }
+          33% {
+            transform: translate(-25px, 25px) rotate(-120deg);
+          }
+          66% {
+            transform: translate(25px, -25px) rotate(-240deg);
+          }
         }
-        
-        /* Ensure modal text is visible */
-        .text-gray-900 {
-          color: #111827 !important;
+
+        @keyframes float-slow {
+          0%,
+          100% {
+            transform: translate(0, 0) scale(1);
+          }
+          50% {
+            transform: translate(15px, -15px) scale(1.1);
+          }
         }
-        
-        /* Fix for select dropdown text */
-        select option {
-          color: #111827;
-          background: white;
+
+        @keyframes fade-down {
+          from {
+            opacity: 0;
+            transform: translateY(-30px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
-        
-        /* Ensure table text is visible */
-        .text-gray-800 {
-          color: #1f2937 !important;
+
+        @keyframes slide-up-fade {
+          from {
+            opacity: 0;
+            transform: translateY(50px) scale(0.95);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+          }
         }
-        
-        .text-gray-700 {
-          color: #374151 !important;
+
+        @keyframes fade-in {
+          from {
+            opacity: 0;
+          }
+          to {
+            opacity: 1;
+          }
+        }
+
+        @keyframes scale-in {
+          from {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          to {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        @keyframes bounce-slow {
+          0%,
+          100% {
+            transform: translateY(0);
+          }
+          50% {
+            transform: translateY(-10px);
+          }
+        }
+
+        @keyframes bounce-in {
+          0% {
+            opacity: 0;
+            transform: translateX(100px) scale(0.5);
+          }
+          50% {
+            transform: translateX(-10px) scale(1.05);
+          }
+          100% {
+            opacity: 1;
+            transform: translateX(0) scale(1);
+          }
+        }
+
+        @keyframes pulse-glow {
+          0%,
+          100% {
+            opacity: 0.2;
+          }
+          50% {
+            opacity: 0.4;
+          }
+        }
+
+        @keyframes shimmer {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(100%);
+          }
+        }
+
+        @keyframes spin-slow {
+          from {
+            transform: rotate(0deg);
+          }
+          to {
+            transform: rotate(360deg);
+          }
+        }
+
+        .animate-float {
+          animation: float 8s ease-in-out infinite;
+        }
+        .animate-float-delayed {
+          animation: float-delayed 10s ease-in-out infinite;
+        }
+        .animate-float-slow {
+          animation: float-slow 12s ease-in-out infinite;
+        }
+        .animate-fade-down {
+          animation: fade-down 0.8s ease-out;
+        }
+        .animate-slide-up-fade {
+          animation: slide-up-fade 0.8s ease-out;
+        }
+        .animate-fade-in {
+          animation: fade-in 0.6s ease-out;
+        }
+        .animate-scale-in {
+          animation: scale-in 0.5s ease-out;
+        }
+        .animate-bounce-slow {
+          animation: bounce-slow 2s ease-in-out infinite;
+        }
+        .animate-bounce-in {
+          animation: bounce-in 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .animate-pulse-glow {
+          animation: pulse-glow 2s ease-in-out infinite;
+        }
+        .animate-shimmer {
+          animation: shimmer 3s infinite;
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+
+        .animation-delay-100 {
+          animation-delay: 0.1s;
+        }
+        .animation-delay-150 {
+          animation-delay: 0.15s;
+        }
+        .animation-delay-200 {
+          animation-delay: 0.2s;
+        }
+        .animation-delay-300 {
+          animation-delay: 0.3s;
+        }
+        .animation-delay-400 {
+          animation-delay: 0.4s;
+        }
+        .animation-delay-500 {
+          animation-delay: 0.5s;
+        }
+
+        .line-clamp-2 {
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
         }
       `}</style>
     </div>
   );
-};
-
-export default EmailSMSAutomation;
+}

@@ -47,7 +47,7 @@
 //       }
 
 //       setSuccessMsg(data.message || "Signup Successful! 🎉");
-      
+
 //       // Reset form
 //       setFormData({
 //         username: "",
@@ -406,11 +406,21 @@
 //   );
 // }
 
-
-
 import React, { useState } from "react";
-import { UserPlus, User, Mail, Phone, Shield, Lock, CheckCircle, XCircle, Zap, ArrowRight, Star } from "lucide-react";
-
+import {
+  UserPlus,
+  User,
+  Mail,
+  Phone,
+  Shield,
+  Lock,
+  CheckCircle,
+  XCircle,
+  Zap,
+  ArrowRight,
+  Star,
+} from "lucide-react";
+import logo90 from "./assets/logo90.jpeg";
 export default function Signup() {
   const [formData, setFormData] = useState({
     username: "",
@@ -457,7 +467,7 @@ export default function Signup() {
       }
 
       setSuccessMsg(data.message || "Account created successfully! 🎉");
-      
+
       setFormData({
         username: "",
         email: "",
@@ -612,7 +622,7 @@ export default function Signup() {
               left: `${Math.random() * 100}%`,
               top: `${Math.random() * 100}%`,
               animationDelay: `${Math.random() * 5}s`,
-              animationDuration: `${5 + Math.random() * 5}s`
+              animationDuration: `${5 + Math.random() * 5}s`,
             }}
           />
         ))}
@@ -620,18 +630,27 @@ export default function Signup() {
 
       <div className="w-full max-w-md relative z-10">
         {/* Header */}
-        <div className="text-center mb-8 slide-up" style={{animationDelay: '0s'}}>
-          <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-purple-600 to-blue-600 rounded-2xl mb-4 card-glow">
-            <Star className="text-white star-icon" size={40} />
+        <div
+          className="text-center mb-8 slide-up"
+          style={{ animationDelay: "0s" }}
+        >
+          <div className="flex justify-center mb-4">
+            <img
+              src={logo90}
+              alt="logo"
+              className="w-32 h-32 object-contain rounded-full shadow-[0_0_40px_rgba(139,92,246,0.6)]"
+            />
           </div>
-          <h1 className="text-4xl font-bold text-white mb-2">
-            Join Us Today
-          </h1>
+
+          <h1 className="text-4xl font-bold text-white mb-2">Join Us Today</h1>
           <p className="text-gray-400">Create your account in seconds</p>
         </div>
 
         {/* Main Card */}
-        <div className="gradient-border rounded-3xl p-8 slide-up" style={{animationDelay: '0.1s'}}>
+        <div
+          className="gradient-border rounded-3xl p-8 slide-up"
+          style={{ animationDelay: "0.1s" }}
+        >
           {/* Success Message */}
           {successMsg && (
             <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-4 rounded-xl mb-6 flex items-center gap-3 slide-up">
@@ -760,7 +779,14 @@ export default function Signup() {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={isLoading || !formData.username || !formData.email || !formData.phone || !formData.role || !formData.password}
+              disabled={
+                isLoading ||
+                !formData.username ||
+                !formData.email ||
+                !formData.phone ||
+                !formData.role ||
+                !formData.password
+              }
               className="w-full bg-gradient-to-r from-purple-600 to-blue-600 text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 mt-6 btn-hover disabled:opacity-50 disabled:cursor-not-allowed relative"
             >
               {isLoading ? (

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AdminDashboard from "./AdminDashboard";
 
 export default function SuperAdmin() {
   const [users, setUsers] = useState([
@@ -70,7 +71,7 @@ export default function SuperAdmin() {
         <h3>👑 Super Admin Panel</h3>
         <span className="badge bg-danger fs-6">ALL ACCESS</span>
       </div>
-
+       <AdminDashboard/>
       {/* STATS */}
       <div className="row mb-4">
         <Stat title="Total Users" value={total} />

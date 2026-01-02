@@ -1,5 +1,13 @@
 import React, { useState } from "react";
-import { LogIn, User, Lock, Shield, ArrowRight, AlertCircle } from "lucide-react";
+import {
+  LogIn,
+  User,
+  Lock,
+  Shield,
+  ArrowRight,
+  AlertCircle,
+} from "lucide-react";
+import logo90 from "./assets/logo90.jpeg";
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -32,7 +40,9 @@ export default function Login() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.errors?.non_field_errors?.[0] || "Invalid credentials");
+        throw new Error(
+          data.errors?.non_field_errors?.[0] || "Invalid credentials"
+        );
       }
 
       const { access, refresh, user } = data.data;
@@ -182,10 +192,17 @@ export default function Login() {
       <div className="w-full max-w-md fade-in">
         {/* Logo/Icon Section */}
         <div className="text-center mb-8">
-          <div className="inline-block p-4 bg-white rounded-full shadow-lg icon-float">
-            <LogIn className="text-orange-500" size={48} />
+          <div className="flex justify-center mb-4">
+            <img
+              src={logo90}
+              alt="logo"
+              className="w-28 h-28 object-contain rounded-full shadow-lg"
+            />
           </div>
-          <h1 className="text-4xl font-bold text-white mt-4 mb-2">Welcome Back!</h1>
+
+          <h1 className="text-4xl font-bold text-white mt-4 mb-2">
+            Welcome Back!
+          </h1>
           <p className="text-orange-100">Sign in to continue your journey</p>
         </div>
 
@@ -208,7 +225,10 @@ export default function Login() {
                 Username
               </label>
               <div className="relative">
-                <User className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500" size={20} />
+                <User
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500"
+                  size={20}
+                />
                 <input
                   name="username"
                   className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 input-field"
@@ -226,7 +246,10 @@ export default function Login() {
                 Password
               </label>
               <div className="relative">
-                <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500" size={20} />
+                <Lock
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500"
+                  size={20}
+                />
                 <input
                   type="password"
                   name="password"
@@ -245,7 +268,10 @@ export default function Login() {
                 Role
               </label>
               <div className="relative">
-                <Shield className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500 z-10" size={20} />
+                <Shield
+                  className="absolute left-4 top-1/2 transform -translate-y-1/2 text-orange-500 z-10"
+                  size={20}
+                />
                 <select
                   name="role"
                   className="w-full pl-12 pr-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 input-field appearance-none bg-white"
@@ -268,7 +294,12 @@ export default function Login() {
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={isLoading || !formData.username || !formData.password || !formData.role}
+              disabled={
+                isLoading ||
+                !formData.username ||
+                !formData.password ||
+                !formData.role
+              }
               className="w-full gradient-bg text-white py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-3 submit-btn disabled:opacity-70 disabled:cursor-not-allowed relative"
             >
               {isLoading ? (
