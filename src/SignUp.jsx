@@ -422,9 +422,10 @@ import {
 } from "lucide-react";
 
 import logo90 from "./assets/logo90.jpeg";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function Signup() {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -480,7 +481,7 @@ export default function Signup() {
       });
 
       setTimeout(() => {
-        window.location.href = "/";
+        navigate("/");
       }, 2000);
     } catch (err) {
       setErrorMsg(err.message || "Something went wrong ❌");
@@ -812,7 +813,7 @@ export default function Signup() {
             <p className="text-gray-400">
               Already have an account?{" "}
               <Link
-                to ="/"
+                to="/"
                 className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
               >
                 Login here →
