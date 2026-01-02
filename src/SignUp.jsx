@@ -808,12 +808,12 @@ export default function Signup() {
           <div className="mt-6 text-center">
             <p className="text-gray-400">
               Already have an account?{" "}
-              <a
-                href="/"
+              <Link
+                to ="/"
                 className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
               >
                 Login here →
-              </a>
+              </Link>
             </p>
           </div>
         </div>
