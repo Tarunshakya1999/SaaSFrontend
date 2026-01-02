@@ -809,12 +809,12 @@ export default function Signup() {
           </div>
 
           {/* Login Link */}
-          <div className="mt-6 text-center">
+          <div className="mt-6 text-center relative z-20">
             <p className="text-gray-400">
               Already have an account?{" "}
               <Link
                 to="/"
-                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors"
+                className="text-purple-400 hover:text-purple-300 font-semibold transition-colors cursor-pointer underline decoration-purple-400/50 hover:decoration-purple-300 underline-offset-2 inline-block"
               >
                 Login here →
               </Link>
